@@ -253,6 +253,30 @@
   }
   .filter-btn.active{border-color:var(--accent);color:var(--accent);background:#eef2ff;}
 
+  .student-filter-box{margin-bottom:16px;}
+  .filter-toggle-btn{
+    border:1.5px solid var(--border);background:#fff;border-radius:10px;
+    padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text);
+  }
+  .filter-toggle-btn.active{border-color:var(--accent);color:var(--accent);}
+  #studentFilterCount{color:var(--accent);font-weight:800;}
+  .student-filter-panel{
+    margin-top:8px;border:1px solid var(--border);border-radius:12px;
+    padding:14px;background:#fff;max-width:420px;
+  }
+  .student-filter-panel input[type=text]{margin-bottom:10px;}
+  .student-filter-actions{display:flex;gap:8px;margin-bottom:10px;}
+  .btn-mini{
+    border:1px solid var(--border);background:#f8f9fd;border-radius:8px;
+    padding:5px 10px;font-size:12px;cursor:pointer;color:var(--muted);
+  }
+  .student-check-list{max-height:220px;overflow-y:auto;}
+  .student-check-item{
+    display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:13.5px;cursor:pointer;
+  }
+  .student-check-item:hover{background:#f8f9fd;}
+  .student-check-item input{margin:0;width:auto;}
+
   .admin-grid-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin-bottom:24px;}
   table.admin-table{border-collapse:collapse;width:100%;min-width:920px;}
   table.admin-table th,table.admin-table td{
@@ -310,7 +334,7 @@
     <h2>참여 정보 입력</h2>
     <p class="lead">방학 중 천체관측동아리 방과후 개설을 위해, 부원들의 <b>불가능한 시간</b>을 조사합니다.</p>
     <label>학번</label>
-    <input type="text" id="inputId" placeholder="예) 30101" inputmode="numeric">
+    <input type="text" id="inputId" placeholder="예) 3101" inputmode="numeric" maxlength="4">
     <label>이름</label>
     <input type="text" id="inputName" placeholder="예) 홍길동">
     <button class="btn btn-primary btn-full" onclick="startSurvey()">시작하기</button>
@@ -363,6 +387,19 @@
     </div>
     <div class="admin-summary" id="adminSummary"></div>
     <div class="filter-bar" id="filterBar"></div>
+
+    <div class="student-filter-box">
+      <button class="filter-toggle-btn" id="studentFilterToggle" onclick="toggleStudentFilterPanel()">👤 학생 선택 필터 <span id="studentFilterCount"></span> ▾</button>
+      <div id="studentFilterPanel" class="student-filter-panel hidden">
+        <input type="text" id="studentSearchInput" placeholder="이름 또는 학번 검색" oninput="renderStudentCheckList()">
+        <div class="student-filter-actions">
+          <button class="btn-mini" onclick="selectAllStudents()">전체 선택</button>
+          <button class="btn-mini" onclick="clearAllStudents()">선택 해제</button>
+        </div>
+        <div id="studentCheckList" class="student-check-list"></div>
+      </div>
+    </div>
+
     <div class="admin-grid-scroll">
       <table class="admin-table" id="adminTable"></table>
     </div>
@@ -479,6 +516,7 @@ function startSurvey(){
   const id = document.getElementById('inputId').value.trim();
   const name = document.getElementById('inputName').value.trim();
   if (!id || !name) { alert('학번과 이름을 모두 입력해주세요.'); return; }
+  if (!/^\d{4}$/.test(id)) { alert('학번은 4자리 숫자로 입력해주세요. (예: 3101)'); return; }
   studentId = id; studentName = name;
 
   callApi('getMy', { id: studentId, name: studentName }).then(res => {
@@ -627,6 +665,8 @@ function showAdminLogin(){
 }
 let adminData = [];
 let adminFilter = 'all';
+let selectedStudentIds = new Set();
+let studentFilterOpen = false;
 
 function doAdminLogin(){
   const pw = document.getElementById('adminPwInput').value;
@@ -661,6 +701,7 @@ function renderAdmin(){
     `<button class="filter-btn${adminFilter===f.v?' active':''}" onclick="setAdminFilter('${f.v}')">${f.label}</button>`
   ).join('');
 
+  renderStudentCheckList();
   renderAdminGrid();
   renderRespondentTable();
 }
@@ -671,8 +712,58 @@ function setAdminFilter(v){
 }
 
 function filteredData(){
-  if (adminFilter === 'all') return adminData;
-  return adminData.filter(d => d.survey === adminFilter);
+  let data = adminFilter === 'all' ? adminData : adminData.filter(d => d.survey === adminFilter);
+  if (selectedStudentIds.size > 0) data = data.filter(d => selectedStudentIds.has(d.id));
+  return data;
+}
+
+/* ---- 학생 선택 필터 ---- */
+function toggleStudentFilterPanel(){
+  studentFilterOpen = !studentFilterOpen;
+  document.getElementById('studentFilterPanel').classList.toggle('hidden', !studentFilterOpen);
+  document.getElementById('studentFilterToggle').classList.toggle('active', studentFilterOpen);
+}
+
+function uniqueStudents(){
+  const map = new Map();
+  adminData.forEach(d => { if (!map.has(d.id)) map.set(d.id, d); });
+  return Array.from(map.values()).sort((a,b) => a.id.localeCompare(b.id));
+}
+
+function renderStudentCheckList(){
+  const q = (document.getElementById('studentSearchInput').value || '').trim();
+  const list = uniqueStudents().filter(s => !q || s.id.includes(q) || s.name.includes(q));
+  document.getElementById('studentCheckList').innerHTML = list.map(s => {
+    const checked = selectedStudentIds.has(s.id) ? 'checked' : '';
+    const cls = surveyColorClass(s.survey);
+    return `<label class="student-check-item"><input type="checkbox" ${checked} onchange="toggleStudent('${s.id}')"><span class="name-chip ${cls}">${s.id} ${s.name}</span></label>`;
+  }).join('') || '<div style="font-size:12.5px;color:var(--muted);padding:8px 4px;">응답자가 없습니다.</div>';
+  updateStudentFilterCount();
+}
+
+function toggleStudent(id){
+  if (selectedStudentIds.has(id)) selectedStudentIds.delete(id);
+  else selectedStudentIds.add(id);
+  updateStudentFilterCount();
+  renderAdminGrid();
+  renderRespondentTable();
+}
+
+function selectAllStudents(){
+  uniqueStudents().forEach(s => selectedStudentIds.add(s.id));
+  renderStudentCheckList();
+  renderAdminGrid();
+  renderRespondentTable();
+}
+function clearAllStudents(){
+  selectedStudentIds.clear();
+  renderStudentCheckList();
+  renderAdminGrid();
+  renderRespondentTable();
+}
+function updateStudentFilterCount(){
+  const el = document.getElementById('studentFilterCount');
+  el.textContent = selectedStudentIds.size > 0 ? `(${selectedStudentIds.size}명 선택됨)` : '';
 }
 
 function surveyColorClass(survey){
