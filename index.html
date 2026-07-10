@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>천체관측동아리 방과후 시간조사</title>
+<style>
+  :root{
+    --accent:#4f46e5;
+    --accent-dark:#3730a3;
+    --danger:#ef4444;
+    --danger-dark:#dc2626;
+    --bg:#f5f6fb;
+    --card:#ffffff;
+    --border:#e2e4ee;
+    --text:#1f2333;
+    --muted:#6b7280;
+    --green:#16a34a;
+    --yellow:#ca8a04;
+    --red:#dc2626;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Pretendard','Malgun Gothic',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .hidden{display:none !important;}
+  #inappBanner{
+    display:none;
+    background:#fef3c7;
+    color:#92400e;
+    padding:10px 14px;
+    font-size:13px;
+    text-align:center;
+  }
+  #inappBanner button{
+    margin-left:8px;
+    background:#92400e;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:6px 10px;
+    font-size:13px;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 18px;
+    max-width:900px;
+    margin:0 auto;
+  }
+  .topbar h1{
+    font-size:16px;
+    margin:0;
+    color:var(--accent-dark);
+  }
+  .admin-entry-btn{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--muted);
+    border-radius:8px;
+    padding:6px 12px;
+    font-size:12px;
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  @media (max-width:420px){
+    .topbar h1{font-size:13.5px;}
+  }
+  .wrap{
+    max-width:900px;
+    margin:0 auto;
+    padding:0 16px 60px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    box-shadow:0 2px 10px rgba(20,20,50,.04);
+  }
+  h2{margin-top:0;font-size:20px;}
+  .lead{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:20px;}
+  .emph-box{
+    background:#eef2ff;
+    border:1px solid #c7d2fe;
+    color:var(--accent-dark);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:20px;
+  }
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+  input[type=text],input[type=password]{
+    width:100%;
+    padding:12px 14px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:16px;
+    margin-bottom:16px;
+  }
+  .btn{
+    display:inline-block;
+    border:none;
+    border-radius:10px;
+    padding:12px 20px;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:var(--accent-dark);}
+  .btn-primary:disabled{background:#c7cbe0;cursor:not-allowed;}
+  .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text);}
+  .btn-full{width:100%;}
+  .btn-row{display:flex;gap:10px;justify-content:space-between;margin-top:20px;}
+
+  .week-tag{
+    display:inline-block;
+    background:#eef2ff;
+    color:var(--accent-dark);
+    font-size:12px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .grid-hint{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .grid-hint .swatch{
+    display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--danger);
+  }
+  table.slot-table{
+    border-collapse:collapse;
+    width:100%;
+    table-layout:fixed;
+    user-select:none;
+  }
+  table.slot-table th,table.slot-table td{
+    border:1px solid var(--border);
+    text-align:center;
+    font-size:12.5px;
+  }
+  table.slot-table th{
+    background:#f8f9fd;
+    padding:8px 2px;
+    font-weight:700;
+    color:var(--text);
+  }
+  table.slot-table th.hour-col,table.slot-table td.hour-col{
+    width:52px;
+    background:#f8f9fd;
+    color:var(--muted);
+    font-weight:600;
+    font-size:11.5px;
+  }
+  td.slot-cell{
+    height:38px;
+    cursor:pointer;
+    background:#fbfcff;
+    touch-action:none;
+    transition:background .05s;
+  }
+  td.slot-cell.selected{
+    background:var(--danger);
+  }
+  td.slot-cell:active{
+    filter:brightness(.95);
+  }
+  .confirm-week-block{margin-bottom:22px;}
+  .confirm-week-block h3{font-size:13px;color:var(--muted);margin:0 0 8px;}
+
+  .modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(20,20,40,.55);
+    display:flex;align-items:center;justify-content:center;
+    padding:16px;
+    z-index:50;
+  }
+  .modal-box{
+    background:#fff;
+    border-radius:16px;
+    padding:26px;
+    max-width:480px;
+    width:100%;
+    max-height:88vh;
+    overflow-y:auto;
+  }
+  .modal-box h3{margin-top:0;font-size:16px;}
+  .survey-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:18px;}
+  .survey-text .emph{
+    font-size:1.12em;
+    font-weight:800;
+    color:var(--accent);
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+  .survey-opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:#f8f9fd;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    padding:13px 16px;
+    font-size:14px;
+    margin-bottom:10px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .survey-opt:hover{border-color:var(--accent);background:#eef2ff;}
+  .survey-opt:disabled{opacity:.5;cursor:not-allowed;}
+
+  .admin-login-box{max-width:340px;}
+  .done-icon{font-size:44px;text-align:center;margin-bottom:6px;}
+  .done-title{text-align:center;font-size:19px;font-weight:700;margin-bottom:8px;}
+  .done-sub{text-align:center;color:var(--muted);font-size:13.5px;}
+
+  /* ===== Admin ===== */
+  .admin-wrap{max-width:1100px;}
+  .admin-summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .summary-card{
+    background:#fff;border:1px solid var(--border);border-radius:12px;
+    padding:14px;text-align:center;
+  }
+  .summary-card .num{font-size:22px;font-weight:800;}
+  .summary-card .lbl{font-size:12px;color:var(--muted);margin-top:2px;}
+  .summary-card.green .num{color:var(--green);}
+  .summary-card.yellow .num{color:var(--yellow);}
+  .summary-card.red .num{color:var(--red);}
+
+  .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .filter-btn{
+    border:1.5px solid var(--border);background:#fff;border-radius:999px;
+    padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);
+  }
+  .filter-btn.active{border-color:var(--accent);color:var(--accent);background:#eef2ff;}
+
+  .admin-grid-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px;margin-bottom:24px;}
+  table.admin-table{border-collapse:collapse;width:100%;min-width:920px;}
+  table.admin-table th,table.admin-table td{
+    border:1px solid var(--border);text-align:center;font-size:12px;padding:0;
+  }
+  table.admin-table th{background:#f8f9fd;padding:6px 2px;white-space:nowrap;}
+  table.admin-table th.hour-col,table.admin-table td.hour-col{
+    background:#f8f9fd;color:var(--muted);font-weight:600;font-size:11px;min-width:50px;
+  }
+  td.count-cell{
+    height:34px;min-width:44px;font-weight:700;color:var(--muted);position:relative;
+  }
+  td.count-cell.has-data{color:#fff;cursor:pointer;}
+  .respondent-table{width:100%;border-collapse:collapse;}
+  .respondent-table th,.respondent-table td{
+    border:1px solid var(--border);padding:8px 10px;font-size:13px;text-align:left;
+  }
+  .respondent-table th{background:#f8f9fd;}
+  .name-chip{font-weight:700;}
+  .name-chip.s1{color:var(--green);}
+  .name-chip.s2{color:var(--yellow);}
+  .name-chip.s3{color:var(--red);}
+
+  #tooltip{
+    position:fixed;
+    background:#1f2333;
+    color:#fff;
+    padding:8px 10px;
+    border-radius:8px;
+    font-size:12px;
+    line-height:1.6;
+    pointer-events:none;
+    z-index:100;
+    max-width:220px;
+    white-space:pre-line;
+  }
+</style>
+</head>
+<body>
+
+<div id="inappBanner">
+  카카오톡 등 인앱 브라우저에서는 정상 동작하지 않을 수 있어요.
+  <button onclick="openInExternalBrowser()">외부 브라우저로 열기</button>
+</div>
+
+<div class="topbar">
+  <h1>🔭 천체관측동아리 방과후 시간조사</h1>
+  <button class="admin-entry-btn" id="adminEntryBtn" onclick="showAdminLogin()">관리자 모드</button>
+</div>
+
+<div class="wrap">
+
+  <!-- 1. 학번/이름 입력 -->
+  <div id="screen-name" class="card">
+    <h2>참여 정보 입력</h2>
+    <p class="lead">방학 중 천체관측동아리 방과후 개설을 위해, 부원들의 <b>불가능한 시간</b>을 조사합니다.</p>
+    <label>학번</label>
+    <input type="text" id="inputId" placeholder="예) 30101" inputmode="numeric">
+    <label>이름</label>
+    <input type="text" id="inputName" placeholder="예) 홍길동">
+    <button class="btn btn-primary btn-full" onclick="startSurvey()">시작하기</button>
+  </div>
+
+  <!-- 2. 주간 그리드 -->
+  <div id="screen-grid" class="card hidden">
+    <div class="week-tag" id="weekTag"></div>
+    <h2>불가능한 시간을 체크해주세요</h2>
+    <div class="grid-hint"><span class="swatch"></span> 빨간색으로 칠해진 칸 = <b>안 되는 시간</b>입니다. 같은 날짜(세로)는 드래그로 한번에 칠할 수 있어요.</div>
+    <div id="gridHost"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" id="prevWeekBtn" onclick="prevWeek()">← 이전주</button>
+      <button class="btn btn-primary" id="nextWeekBtn" onclick="nextWeek()">다음주 →</button>
+    </div>
+  </div>
+
+  <!-- 3. 제출 전 확인 -->
+  <div id="screen-confirm" class="card hidden">
+    <h2>제출 전 확인</h2>
+    <p class="lead">아래 내용으로 제출됩니다. 빨간색 = 안 되는 시간이에요. 수정이 필요하면 수정하기를 눌러주세요.</p>
+    <div id="confirmHost"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="backToEdit()">수정하기</button>
+      <button class="btn btn-primary" onclick="openSurveyModal()">제출 확인</button>
+    </div>
+  </div>
+
+  <!-- 4. 제출 완료 -->
+  <div id="screen-done" class="card hidden">
+    <div class="done-icon">✅</div>
+    <div class="done-title">제출이 완료되었습니다!</div>
+    <div class="done-sub">응답해주셔서 감사합니다. 일정이 확정되면 별도로 안내할게요.</div>
+  </div>
+
+  <!-- 관리자 로그인 -->
+  <div id="screen-admin-login" class="card admin-login-box hidden">
+    <h2>관리자 로그인</h2>
+    <label>비밀번호</label>
+    <input type="password" id="adminPwInput" placeholder="비밀번호 입력">
+    <button class="btn btn-primary btn-full" onclick="doAdminLogin()">확인</button>
+    <button class="btn btn-outline btn-full" style="margin-top:8px;" onclick="showScreen('screen-name')">돌아가기</button>
+  </div>
+
+  <!-- 관리자 대시보드 -->
+  <div id="screen-admin" class="admin-wrap hidden">
+    <div class="btn-row" style="margin-bottom:14px;">
+      <h2 style="margin:0;">📊 관리자 대시보드</h2>
+      <button class="btn btn-outline" onclick="location.reload()">학생 화면으로</button>
+    </div>
+    <div class="admin-summary" id="adminSummary"></div>
+    <div class="filter-bar" id="filterBar"></div>
+    <div class="admin-grid-scroll">
+      <table class="admin-table" id="adminTable"></table>
+    </div>
+    <h2 style="font-size:16px;">응답자 목록</h2>
+    <table class="respondent-table" id="respondentTable"></table>
+  </div>
+
+</div>
+
+<!-- 설문 팝업 -->
+<div id="surveyModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>마지막으로 한 가지만 더 여쭤볼게요 🙂</h3>
+    <div class="survey-text">
+      천체동아리 방과후지만 저녁이 아니라서 별은 보지 못합니다. 과학동아리 발표대회를 준비하기 위한 목적이 가장 크며, 모형 만들기, 천체사진 편집 실습, 홈페이지 꾸미기 등의 활동으로 진행됩니다.
+      <span class="emph">이후 일정이 확정되면, 방과후 신청 생각이 있나요?</span>
+    </div>
+    <button class="survey-opt" onclick="submitFinal('1')">① 시간 빼서라도 무조건 바로 신청</button>
+    <button class="survey-opt" onclick="submitFinal('2')">② 시간 맞으면 신청할게요</button>
+    <button class="survey-opt" onclick="submitFinal('3')">③ 안 할거에요. 개학하고 만나요!</button>
+  </div>
+</div>
+
+<div id="tooltip" class="hidden"></div>
+
+<script>
+/* ===================== 설정 ===================== */
+const APPS_SCRIPT_URL = 'PASTE_DEPLOYED_WEBAPP_URL_HERE';
+
+/* ===================== 인앱 브라우저 감지 ===================== */
+function detectInAppBrowser(){
+  const ua = navigator.userAgent || '';
+  return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua);
+}
+function openInExternalBrowser(){
+  const url = window.location.href;
+  const ua = navigator.userAgent || '';
+  if (/KAKAOTALK/i.test(ua)) {
+    window.location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+  } else if (/NAVER/i.test(ua)) {
+    window.location.href = 'naversearchapp://inappbrowser?app=naversearchapp&url=' + encodeURIComponent(url);
+  } else {
+    window.location.href = 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+  }
+}
+if (detectInAppBrowser()) document.getElementById('inappBanner').style.display = 'block';
+
+/* ===================== JSONP API ===================== */
+function jsonpOnce(url){
+  return new Promise((resolve, reject) => {
+    const cbName = '_cb' + Date.now() + Math.floor(Math.random()*1e6);
+    const script = document.createElement('script');
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    const timeoutId = setTimeout(() => { delete window[cbName]; script.remove(); reject(new Error('시간 초과')); }, 10000);
+    window[cbName] = data => { clearTimeout(timeoutId); delete window[cbName]; script.remove(); resolve(data); };
+    script.onerror = () => { clearTimeout(timeoutId); delete window[cbName]; script.remove(); reject(new Error('요청 실패')); };
+    document.head.appendChild(script);
+  });
+}
+function jsonp(url){
+  return jsonpOnce(url).catch(() => new Promise((resolve, reject) => {
+    setTimeout(() => { jsonpOnce(url).then(resolve).catch(reject); }, 1500);
+  }));
+}
+function callApi(action, params){
+  let url;
+  try {
+    url = new URL(APPS_SCRIPT_URL);
+  } catch (e) {
+    return Promise.reject(new Error('APPS_SCRIPT_URL이 설정되지 않았습니다.'));
+  }
+  url.searchParams.set('action', action);
+  if (params) Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
+  return jsonp(url.toString()).then(d => {
+    if (d && d.error) throw new Error(d.error);
+    return d;
+  });
+}
+
+/* ===================== 날짜/시간 정의 ===================== */
+const HOURS = [10,11,12,13,14,15,16]; // 10~11 ... 16~17
+const WEEKS = [
+  { label:'1주차 (7/23 ~ 7/24)', dates:[
+    {key:'0723', label:'7/23(목)'}, {key:'0724', label:'7/24(금)'}
+  ]},
+  { label:'2주차 (7/27 ~ 7/31)', dates:[
+    {key:'0727', label:'7/27(월)'}, {key:'0728', label:'7/28(화)'}, {key:'0729', label:'7/29(수)'},
+    {key:'0730', label:'7/30(목)'}, {key:'0731', label:'7/31(금)'}
+  ]},
+  { label:'3주차 (8/3 ~ 8/7)', dates:[
+    {key:'0803', label:'8/3(월)'}, {key:'0804', label:'8/4(화)'}, {key:'0805', label:'8/5(수)'},
+    {key:'0806', label:'8/6(목)'}, {key:'0807', label:'8/7(금)'}
+  ]},
+  { label:'4주차 (8/10 ~ 8/14)', dates:[
+    {key:'0810', label:'8/10(월)'}, {key:'0811', label:'8/11(화)'}, {key:'0812', label:'8/12(수)'},
+    {key:'0813', label:'8/13(목)'}, {key:'0814', label:'8/14(금)'}
+  ]}
+];
+const ALL_DATES = WEEKS.flatMap(w => w.dates);
+
+/* ===================== 상태 ===================== */
+let studentId = '', studentName = '';
+let currentWeek = 0;
+const unavailable = new Set(); // "0723_10"
+
+function showScreen(id){
+  ['screen-name','screen-grid','screen-confirm','screen-done','screen-admin-login','screen-admin'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+/* ===================== 1. 시작 ===================== */
+function startSurvey(){
+  const id = document.getElementById('inputId').value.trim();
+  const name = document.getElementById('inputName').value.trim();
+  if (!id || !name) { alert('학번과 이름을 모두 입력해주세요.'); return; }
+  studentId = id; studentName = name;
+
+  callApi('getMy', { id: studentId, name: studentName }).then(res => {
+    if (res && res.found) {
+      String(res.slots || '').split(',').filter(Boolean).forEach(t => unavailable.add(t));
+    }
+  }).catch(() => {}).finally(() => {
+    currentWeek = 0;
+    showScreen('screen-grid');
+    renderGrid();
+  });
+}
+
+/* ===================== 2. 그리드 (드래그 선택) ===================== */
+function renderGrid(){
+  const week = WEEKS[currentWeek];
+  document.getElementById('weekTag').textContent = week.label + `  (${currentWeek+1}/${WEEKS.length}주)`;
+
+  let html = '<table class="slot-table"><thead><tr><th class="hour-col">시간</th>';
+  week.dates.forEach(d => { html += `<th>${d.label}</th>`; });
+  html += '</tr></thead><tbody>';
+  HOURS.forEach(h => {
+    html += `<tr><td class="hour-col">${h}~${h+1}시</td>`;
+    week.dates.forEach(d => {
+      const token = d.key + '_' + h;
+      const sel = unavailable.has(token) ? ' selected' : '';
+      html += `<td class="slot-cell${sel}" data-date="${d.key}" data-hour="${h}"></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('gridHost').innerHTML = html;
+
+  document.getElementById('prevWeekBtn').disabled = currentWeek === 0;
+  document.getElementById('prevWeekBtn').style.visibility = currentWeek === 0 ? 'hidden' : 'visible';
+  const nextBtn = document.getElementById('nextWeekBtn');
+  nextBtn.textContent = currentWeek === WEEKS.length - 1 ? '제출하기 →' : '다음주 →';
+
+  attachDragHandlers();
+}
+
+let dragging = false, dragDateKey = null, paintValue = true;
+
+function attachDragHandlers(){
+  const cells = document.querySelectorAll('#gridHost td.slot-cell');
+  cells.forEach(cell => {
+    cell.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      dragging = true;
+      dragDateKey = cell.dataset.date;
+      const token = cell.dataset.date + '_' + cell.dataset.hour;
+      paintValue = !unavailable.has(token);
+      paintCell(cell, paintValue);
+    });
+  });
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEnd);
+  document.addEventListener('pointercancel', onDragEnd);
+}
+function onDragMove(e){
+  if (!dragging) return;
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  if (!el || !el.classList || !el.classList.contains('slot-cell')) return;
+  if (el.dataset.date !== dragDateKey) return;
+  paintCell(el, paintValue);
+}
+function onDragEnd(){
+  dragging = false;
+  dragDateKey = null;
+}
+function paintCell(cell, on){
+  const token = cell.dataset.date + '_' + cell.dataset.hour;
+  if (on) { unavailable.add(token); cell.classList.add('selected'); }
+  else { unavailable.delete(token); cell.classList.remove('selected'); }
+}
+
+function prevWeek(){
+  if (currentWeek === 0) return;
+  currentWeek--; renderGrid();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function nextWeek(){
+  if (currentWeek < WEEKS.length - 1) {
+    currentWeek++; renderGrid();
+    window.scrollTo({top:0, behavior:'smooth'});
+  } else {
+    showConfirm();
+  }
+}
+
+/* ===================== 3. 확인 화면 ===================== */
+function showConfirm(){
+  let html = '';
+  WEEKS.forEach(week => {
+    html += `<div class="confirm-week-block"><h3>${week.label}</h3>`;
+    html += '<table class="slot-table"><thead><tr><th class="hour-col">시간</th>';
+    week.dates.forEach(d => { html += `<th>${d.label}</th>`; });
+    html += '</tr></thead><tbody>';
+    HOURS.forEach(h => {
+      html += `<tr><td class="hour-col">${h}~${h+1}시</td>`;
+      week.dates.forEach(d => {
+        const token = d.key + '_' + h;
+        const sel = unavailable.has(token) ? ' selected' : '';
+        html += `<td class="slot-cell${sel}"></td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  });
+  document.getElementById('confirmHost').innerHTML = html;
+  showScreen('screen-confirm');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function backToEdit(){
+  showScreen('screen-grid');
+  renderGrid();
+}
+
+/* ===================== 4. 설문 팝업 + 최종 제출 ===================== */
+function openSurveyModal(){
+  document.getElementById('surveyModal').classList.remove('hidden');
+}
+function closeSurveyModal(){
+  document.getElementById('surveyModal').classList.add('hidden');
+}
+function submitFinal(surveyAnswer){
+  const opts = document.querySelectorAll('.survey-opt');
+  opts.forEach(o => o.disabled = true);
+
+  const slots = Array.from(unavailable).join(',');
+  callApi('submit', { id: studentId, name: studentName, slots: slots, survey: surveyAnswer })
+    .then(() => {
+      closeSurveyModal();
+      showScreen('screen-done');
+      window.scrollTo({top:0, behavior:'smooth'});
+    })
+    .catch(err => {
+      alert('제출 중 오류가 발생했습니다: ' + err.message);
+      opts.forEach(o => o.disabled = false);
+    });
+}
+
+/* ===================== 관리자 ===================== */
+function showAdminLogin(){
+  showScreen('screen-admin-login');
+}
+let adminData = [];
+let adminFilter = 'all';
+
+function doAdminLogin(){
+  const pw = document.getElementById('adminPwInput').value;
+  callApi('getStats', { pw: pw }).then(res => {
+    adminData = res.list || [];
+    showScreen('screen-admin');
+    renderAdmin();
+  }).catch(err => {
+    alert(err.message || '로그인 실패');
+  });
+}
+
+function renderAdmin(){
+  // 요약
+  const total = adminData.length;
+  const c1 = adminData.filter(d => d.survey === '1').length;
+  const c2 = adminData.filter(d => d.survey === '2').length;
+  const c3 = adminData.filter(d => d.survey === '3').length;
+  document.getElementById('adminSummary').innerHTML = `
+    <div class="summary-card"><div class="num">${total}</div><div class="lbl">총 응답</div></div>
+    <div class="summary-card green"><div class="num">${c1}</div><div class="lbl">① 무조건 신청</div></div>
+    <div class="summary-card yellow"><div class="num">${c2}</div><div class="lbl">② 시간 맞으면</div></div>
+    <div class="summary-card red"><div class="num">${c3}</div><div class="lbl">③ 안 함</div></div>
+  `;
+
+  // 필터바
+  const filters = [
+    {v:'all', label:'전체'}, {v:'1', label:'① 무조건 신청'},
+    {v:'2', label:'② 시간 맞으면'}, {v:'3', label:'③ 안 함'}
+  ];
+  document.getElementById('filterBar').innerHTML = filters.map(f =>
+    `<button class="filter-btn${adminFilter===f.v?' active':''}" onclick="setAdminFilter('${f.v}')">${f.label}</button>`
+  ).join('');
+
+  renderAdminGrid();
+  renderRespondentTable();
+}
+
+function setAdminFilter(v){
+  adminFilter = v;
+  renderAdmin();
+}
+
+function filteredData(){
+  if (adminFilter === 'all') return adminData;
+  return adminData.filter(d => d.survey === adminFilter);
+}
+
+function surveyColorClass(survey){
+  if (survey === '1') return 's1';
+  if (survey === '2') return 's2';
+  if (survey === '3') return 's3';
+  return '';
+}
+
+function renderAdminGrid(){
+  const data = filteredData();
+  let html = '<thead><tr><th class="hour-col">시간</th>';
+  ALL_DATES.forEach(d => { html += `<th>${d.label}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  HOURS.forEach(h => {
+    html += `<tr><td class="hour-col">${h}~${h+1}시</td>`;
+    ALL_DATES.forEach(d => {
+      const token = d.key + '_' + h;
+      const people = data.filter(p => p.slots.includes(token));
+      const count = people.length;
+      if (count > 0) {
+        const bg = countToColor(count);
+        const peopleText = people.map(p => p.id + ' ' + p.name).join('\\n');
+        html += `<td class="count-cell has-data" style="background:${bg}" data-people="${escapeAttr(peopleText)}" data-survey="${people.map(p=>p.survey).join(',')}" data-names="${escapeAttr(people.map(p=>p.name).join(','))}">${count}</td>`;
+      } else {
+        html += `<td class="count-cell">0</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  const table = document.getElementById('adminTable');
+  table.innerHTML = html;
+
+  table.querySelectorAll('td.has-data').forEach(cell => {
+    cell.addEventListener('mouseenter', e => showTooltip(e, cell));
+    cell.addEventListener('mousemove', e => moveTooltip(e));
+    cell.addEventListener('mouseleave', hideTooltip);
+  });
+}
+
+function countToColor(count){
+  // count 많을수록 진한 인디고
+  const capped = Math.min(count, 10);
+  const alpha = 0.25 + (capped / 10) * 0.65;
+  return `rgba(79,70,229,${alpha.toFixed(2)})`;
+}
+
+function escapeAttr(s){
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+}
+
+function showTooltip(e, cell){
+  const people = cell.dataset.people.split('\\n');
+  const surveys = cell.dataset.survey.split(',');
+  const tip = document.getElementById('tooltip');
+  tip.innerHTML = people.map((p, i) => {
+    const cls = surveyColorClass(surveys[i]);
+    return `<span style="color:${colorFor(cls)}">● ${p}</span>`;
+  }).join('<br>');
+  tip.classList.remove('hidden');
+  moveTooltip(e);
+}
+function colorFor(cls){
+  if (cls === 's1') return '#4ade80';
+  if (cls === 's2') return '#facc15';
+  if (cls === 's3') return '#f87171';
+  return '#fff';
+}
+function moveTooltip(e){
+  const tip = document.getElementById('tooltip');
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top = (e.clientY + 14) + 'px';
+}
+function hideTooltip(){
+  document.getElementById('tooltip').classList.add('hidden');
+}
+
+function renderRespondentTable(){
+  const data = filteredData().slice().sort((a,b) => a.id.localeCompare(b.id));
+  let html = '<tr><th>학번</th><th>이름</th><th>제출시각</th><th>안되는 시간 수</th><th>설문답변</th></tr>';
+  const surveyLabel = {'1':'① 무조건 신청','2':'② 시간 맞으면','3':'③ 안 함'};
+  data.forEach(d => {
+    const cls = surveyColorClass(d.survey);
+    const t = d.time ? new Date(d.time).toLocaleString('ko-KR') : '-';
+    html += `<tr>
+      <td>${d.id}</td>
+      <td class="name-chip ${cls}">${d.name}</td>
+      <td>${t}</td>
+      <td>${d.slots.length}</td>
+      <td class="name-chip ${cls}">${surveyLabel[d.survey] || '-'}</td>
+    </tr>`;
+  });
+  document.getElementById('respondentTable').innerHTML = html;
+}
+</script>
+</body>
+</html>
