@@ -50,15 +50,25 @@ function submit_(id, name, slots, survey) {
   id = norm_(id); name = norm_(name);
   if (!id || !name) return { error: '학번/이름을 입력해주세요.' };
   if (survey !== '1' && survey !== '2' && survey !== '3') return { error: '설문에 답변해주세요.' };
-  var sheet = getSheet_();
-  var row = findRow_(id, name);
-  var rowData = [id, name, new Date(), slots || '', survey];
-  if (row === -1) {
-    sheet.appendRow(rowData);
-  } else {
-    sheet.getRange(row, 1, 1, rowData.length).setValues([rowData]);
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+  } catch (e) {
+    return { error: '요청이 많아 처리 중입니다. 잠시 후 다시 시도해주세요.' };
   }
-  return { ok: true };
+  try {
+    var sheet = getSheet_();
+    var row = findRow_(id, name);
+    var rowData = [id, name, new Date(), slots || '', survey];
+    if (row === -1) {
+      sheet.appendRow(rowData);
+    } else {
+      sheet.getRange(row, 1, 1, rowData.length).setValues([rowData]);
+    }
+    return { ok: true };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function getMy_(id, name) {
